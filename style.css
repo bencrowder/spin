@@ -1,0 +1,5 @@
+body						{ margin: 0; padding: 0; font-family: "Lucida Grande", Helvetica, Arial, sans-serif; background: #222; }
+
+#page						{ margin: 50px auto; width: 900px; }
+
+#canvas						{ background: #000; }
