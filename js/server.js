@@ -6,6 +6,7 @@
 var Server = function() {
 	this.clicks = 1;			// timer
 	this.debug = false;
+	this.paused = false;
 
 	this.b2world;				// Box2d world
 	this.canvas;				// HTML canvas
@@ -45,9 +46,10 @@ var Server = function() {
 			'restitution': 0.9,
 		},
 		'obstacle': {
-			'width': 1,
-			'height': 1,
-			'depth': 1,
+			'size': .4,
+			'width': .85,
+			'height': .85,
+			'depth': 5,
 			'density': 1,
 			'friction': 0,
 			'restitution': 0.9,
@@ -58,8 +60,8 @@ var Server = function() {
 		},
 		'player': {
 			'initialX': 0,
-			'initialY': 3,
-			'initialAngle': 0.3,
+			'initialY': 5.5,
+			'initialAngle': 0,
 			'size': 0.5,
 			'maxHealth': 1000,
 			'density': 10,
@@ -68,8 +70,8 @@ var Server = function() {
 			'angularDamping': 4.0,
 			'maxAngularVelocity': 2,
 			'turnSpeed': 150,
-			'thrustAmount': 5,
-			'maxVelocity': 7,
+			'thrustAmount': 10,
+			'maxVelocity': 15,
 		},
 		'exit': {
 			'size': 0.25,
@@ -92,37 +94,39 @@ var Server = function() {
 	this.rotIndex = 0;
 
 	this.update = function() {
-		// Run physics
-		server.b2world.Step(server.b2stepAmount, 10, 10);
+		if (!server.paused) {
+			// Run physics
+			server.b2world.Step(server.b2stepAmount, 10, 10);
 
-		// Update player location
-		server.player.x = server.player.body.GetPosition().x;
-		server.player.y = server.player.body.GetPosition().y;
-		server.player.angle = server.player.body.GetAngle();
+			// Update player location
+			server.player.x = server.player.body.GetPosition().x;
+			server.player.y = server.player.body.GetPosition().y;
+			server.player.angle = server.player.body.GetAngle();
 
-		// Update obstacle locations
-		for (var i=0; i<server.obstacles.length; i++) {
-			var o = server.obstacles[i];
+			// Update obstacle locations
+			for (var i=0; i<server.obstacles.length; i++) {
+				var o = server.obstacles[i];
 
-			o.x = o.body.GetPosition().x;
-			o.y = o.body.GetPosition().y;
-			o.angle = o.body.GetAngle();
+				o.x = o.body.GetPosition().x;
+				o.y = o.body.GetPosition().y;
+				o.angle = o.body.GetAngle();
+			}
+
+			// Every so often, rotate the world
+			if (server.clicks % 300 == 0) {
+				server.rotateWorld();
+			}
+
+			// Draw
+			server.b2world.DrawDebugData();
+			server.display.render();
+
+			// Clear
+			server.b2world.ClearForces();
+
+			// Update clicks
+			server.clicks++;
 		}
-
-		// Every so often, rotate the world
-		if (server.clicks % 300 == 0) {
-			server.rotateWorld();
-		}
-
-		// Draw
-		server.b2world.DrawDebugData();
-		server.display.render();
-
-		// Clear
-		server.b2world.ClearForces();
-
-		// Update clicks
-		server.clicks++;
 
 		requestAnimFrame(server.update);
 	};

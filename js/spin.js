@@ -39,7 +39,7 @@ $(document).ready(function() {
 	// Keyboard stuff
 	$(document).keydown(function(e) {
 		server.keys[e.which] = true;
-		server.player.keypressed();
+		return server.player.keypressed();
 	});
 
 	$(document).keyup(function(e) {

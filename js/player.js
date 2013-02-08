@@ -32,10 +32,18 @@ var Player = function() {
 	};
 
 	this.keypressed = function() {
+		var key_SPACE = 32;
 		var key_LEFT = 37;
 		var key_UP = 38;
 		var key_RIGHT = 39;
 		var key_DOWN = 40;
+
+		// Pause
+		if (server.keys[key_SPACE]) {
+			server.paused = (server.paused) ? false : true;
+
+			return false;
+		}
 
 		// Turn left
 		if (server.keys[key_LEFT]) {

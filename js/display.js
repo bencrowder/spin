@@ -19,6 +19,8 @@ var Display = function() {
 
 		$("#container").append(server.renderer.domElement);
 
+		this.initPostProcessing();
+
 		this.initBackgroundPlane();
 
 		this.initPlayer();
@@ -42,9 +44,32 @@ var Display = function() {
 		}
 	};
 
+	// Set up post processing
+	this.initPostProcessing = function() {
+		this.composer = new THREE.EffectComposer(server.renderer);
+		this.composer.addPass(new THREE.RenderPass(server.scene, server.camera));
+
+		var effect = new THREE.ShaderPass(THREE.VignetteShader);
+		effect.uniforms['offset'].value = 0.95;
+		effect.uniforms['darkness'].value = 1.1;
+		this.composer.addPass(effect);
+
+		var effect = new THREE.ShaderPass(THREE.FilmShader);
+		effect.uniforms['grayscale'].value = 0.1;
+		effect.uniforms['sCount'].value = 14000;
+		effect.uniforms['nIntensity'].value = 0.3;
+		effect.uniforms['sIntensity'].value = 0.1;
+		this.composer.addPass(effect);
+
+		var effect = new THREE.ShaderPass(THREE.SepiaShader);
+		effect.uniforms['amount'].value = 0.3;
+		effect.renderToScreen = true;
+		this.composer.addPass(effect);
+	};
+
 	// Set up background plane
 	this.initBackgroundPlane = function() {
-		var bgTexture = new THREE.ImageUtils.loadTexture('images/checkerboard.jpg');
+		var bgTexture = new THREE.ImageUtils.loadTexture('images/bg.jpg');
 		bgTexture.wrapS = bgTexture.wrapT = THREE.RepeatWrapping; 
 		bgTexture.repeat.set(1500, 1500);
 
@@ -62,7 +87,6 @@ var Display = function() {
 	// Set up player
 	this.initPlayer = function() {
 		var playerMat = new THREE.MeshLambertMaterial({ color: 0x345678 });
-		var playerPoly = [ [0, 0, 0], [1, 0, 0], [0, 1.5, 0] ];
 
 		var playerShape = new THREE.Shape();
 		playerShape.moveTo(0, .25);
@@ -74,15 +98,22 @@ var Display = function() {
 		this.player = new THREE.Mesh(playerGeom, playerMat);
 
 		this.player.position.set(server.player.x, -server.player.y, 0);
-		this.player.scale.set(.15, .15, .15);
+		this.player.scale.set(.1, .1, .1);
 		this.player.castShadow = true;
+		this.player.receiveShadow = true;
 		
 		server.scene.add(this.player);
 	};
 
 	// Set up walls
 	this.initWalls = function() {
-		var wallMat = new THREE.MeshLambertMaterial({ color: 0x445544 });
+		var wallTexture = new THREE.ImageUtils.loadTexture('images/wall.jpg');
+		wallTexture.wrapS = wallTexture.wrapT = THREE.RepeatWrapping; 
+		wallTexture.repeat.set(1, 1);
+
+		var wallMat = new THREE.MeshLambertMaterial({ map: wallTexture });
+		// var wallMat = new THREE.MeshLambertMaterial({ color: 0x445544 });
+
 		for (var i=0; i<server.world.walls.length; i++) {
 			var wall = server.world.walls[i];
 
@@ -95,6 +126,7 @@ var Display = function() {
 			newWall.position.x = x + (width / 2);
 			newWall.position.y = -(y + (height / 2));
 			newWall.castShadow = true;
+			newWall.receiveShadow = true;
 
 			server.scene.add(newWall);
 		}
@@ -102,7 +134,7 @@ var Display = function() {
 
 	// Set up obstacles
 	this.initObstacles = function() {
-		var obstacleMat = new THREE.MeshPhongMaterial({ color: 0xff3322 });
+		var obstacleMat = new THREE.MeshLambertMaterial({ color: 0x661111 });
 		this.obstacles = [];
 		for (var i=0; i<server.obstacles.length; i++) {
 			var obst = server.obstacles[i];
@@ -114,6 +146,7 @@ var Display = function() {
 			newObstacle.position.x = x + (server.settings.obstacle.width / 2);
 			newObstacle.position.y = -(y + (server.settings.obstacle.height / 2));
 			newObstacle.castShadow = true;
+			newObstacle.receiveShadow = true;
 
 			this.obstacles.push(newObstacle);
 			server.scene.add(newObstacle);
@@ -122,13 +155,12 @@ var Display = function() {
 
 	// Set up lights
 	this.initLights = function() {
-		/*
-		var pointLight = new THREE.PointLight(0xffcc99);
+		var pointLight = new THREE.PointLight(0xffffff);
 		pointLight.position.x = 10;
 		pointLight.position.y = -50;
 		pointLight.position.z = 130;
+		pointLight.intensity = 0.35;
 		server.scene.add(pointLight);
-		*/
 
 		var spotLight = new THREE.SpotLight(0xffffff);
 		spotLight.position.x = 50;
@@ -140,79 +172,50 @@ var Display = function() {
 		spotLight.shadowMapHeight = 2048;
 		spotLight.intensity = 2;
 		server.scene.add(spotLight);
-
-		/*
-		var spotLight = new THREE.SpotLight(0xff0000);
-		spotLight.position.x = -90;
-		spotLight.position.y = 50;
-		spotLight.position.z = 70;
-		spotLight.castShadow = true;
-		spotLight.shadowCameraVisible = true;
-		spotLight.shadowDarkness = 0.5;
-		spotLight.shadowMapWidth = 2048;
-		spotLight.shadowMapHeight = 2048;
-		spotLight.intensity = 2;
-		server.scene.add(spotLight);
-		*/
-
-		/*
-		var dirLight = new THREE.DirectionalLight(0xffff00, 1);
-		dirLight.position.set(1, 1, 1);
-		server.scene.add(dirLight);
-
-		var dirLight = new THREE.DirectionalLight(0x0000ff, 1);
-		dirLight.position.set(-1, -1, 1);
-		server.scene.add(dirLight);
-		*/
-
-		/*
-		var pointLight = new THREE.PointLight(0xccccff);
-		pointLight.position.x = -50;
-		pointLight.position.y = 50;
-		pointLight.position.z = 110;
-		server.scene.add(pointLight);
-		*/
 	};
 
 	this.render = function() {
-		// Update player location
-		this.player.position.x = server.player.x;
-		this.player.position.y = -server.player.y;
-		this.player.rotation.z = -server.player.angle;
+		if (!server.paused) {
+			// Update player location
+			this.player.position.x = server.player.x;
+			this.player.position.y = -server.player.y;
+			this.player.rotation.z = -server.player.angle;
 
-		// Update obstacle locations
-		for (var i=0; i<server.obstacles.length; i++) {
-			var obst = server.obstacles[i];
+			// Update obstacle locations
+			for (var i=0; i<server.obstacles.length; i++) {
+				var obst = server.obstacles[i];
 
-			this.obstacles[i].position.x = obst.x;
-			this.obstacles[i].position.y = -obst.y;
-			this.obstacles[i].rotation.z = obst.angle;
-		}
+				this.obstacles[i].position.x = obst.x;
+				this.obstacles[i].position.y = -obst.y;
+				this.obstacles[i].rotation.z = obst.angle;
+			}
 
-		// Point the camera
-		server.camera.position.x = this.player.position.x;
-		server.camera.position.y = this.player.position.y;
-		server.camera.lookAt(new THREE.Vector3(this.player.position.x, this.player.position.y, 0));
+			// Point the camera
+			server.camera.position.x = this.player.position.x;
+			server.camera.position.y = this.player.position.y;
+			server.camera.lookAt(new THREE.Vector3(this.player.position.x, this.player.position.y, 0));
 
-		// Rotate the camera
-		if (server.cameraRotation != server.targetRotation) {
-			console.log(server.cameraRotation, "!=", server.targetRotation);
-			server.cameraRotation += server.settings.camera.step;
+			// Rotate the camera
+			if (server.cameraRotation != server.targetRotation) {
+				console.log(server.cameraRotation, "!=", server.targetRotation);
+				server.cameraRotation += server.settings.camera.step;
 
-			// Bounds checking
-			if (server.targetRotation == 0) {
-				if (server.cameraRotation > Math.PI * 2) {
-					server.cameraRotation = 0;
-				}
-			} else {
-				if (server.cameraRotation > server.targetRotation) {
-					server.cameraRotation = server.targetRotation;
+				// Bounds checking
+				if (server.targetRotation == 0) {
+					if (server.cameraRotation > Math.PI * 2) {
+						server.cameraRotation = 0;
+					}
+				} else {
+					if (server.cameraRotation > server.targetRotation) {
+						server.cameraRotation = server.targetRotation;
+					}
 				}
 			}
-		}
-		server.camera.rotation.z = server.cameraRotation;
+			server.camera.rotation.z = server.cameraRotation;
 
-		// Render the scene
-		server.renderer.render(server.scene, server.camera);
+			// Render the scene
+			//server.renderer.render(server.scene, server.camera);
+			this.composer.render(0);
+		}
 	};
 };
