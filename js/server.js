@@ -7,6 +7,9 @@ var Server = function() {
 	this.clicks = 1;			// timer
 	this.debug = false;
 	this.paused = false;
+	this.gameOver = false;
+	this.win = false;
+	this.timeLeft;
 
 	this.b2world;				// Box2d world
 	this.canvas;				// HTML canvas
@@ -24,6 +27,9 @@ var Server = function() {
 	this.targetRotation = 0;
 	
 	this.settings = {
+		'game': {
+			'timeLeft': 180,			// in seconds (3 minutes)
+		},
 		'screen': {
 			'width': 900,
 			'height': 600,
@@ -33,7 +39,7 @@ var Server = function() {
 			'far': 50,
 		},
 		'world': {
-			'gravity': 1.3,
+			'gravity': 2,
 			'scale': 25,
 		},
 		'camera': {
@@ -49,29 +55,31 @@ var Server = function() {
 			'size': .4,
 			'width': .85,
 			'height': .85,
-			'depth': 5,
+			'depth': 4,
 			'density': 1,
 			'friction': 0,
-			'restitution': 0.9,
+			'restitution': 1,
 		},
 		'damage': {
+			'hitLength': 15,
 			'wall': 3,
 			'floater': 5,
+			'obstacle': 10,
 		},
 		'player': {
-			'initialX': 0,
-			'initialY': 5.5,
+			'initialX': 0, //-7,	// 0
+			'initialY': 5.5, //4,	// 5.5
 			'initialAngle': 0,
 			'size': 0.5,
 			'maxHealth': 1000,
-			'density': 10,
-			'friction': 0.5,
+			'density': 8,
+			'friction': 0.1,
 			'restitution': 0.1,
 			'angularDamping': 4.0,
 			'maxAngularVelocity': 2,
 			'turnSpeed': 150,
 			'thrustAmount': 10,
-			'maxVelocity': 15,
+			'maxVelocity': 50,
 		},
 		'exit': {
 			'size': 0.25,
@@ -93,8 +101,36 @@ var Server = function() {
 	this.rotations = [ 0, Math.PI / 2, Math.PI, 3 * Math.PI / 2 ];
 	this.rotIndex = 0;
 
+	this.resetGame = function() {
+		// Instance objects
+		server.player = new Player();
+		server.world = new World();
+		server.utils = new Utils();
+		server.display = new Display();
+
+		// Set up the Box2D world	
+		server.b2world = new b2World(new b2Vec2(0, server.settings.world.gravity), true);
+		server.b2scale = server.settings.world.scale;
+		server.b2stepAmount = 1/60;
+
+		// Create the world
+		server.world.generate();
+
+		// Create the player
+		server.player.generate();
+
+		// Set up THREE.js, etc.
+		server.display.init();
+
+		// Set up collision detection
+		server.collision();
+	
+		// Start the game loop again
+		requestAnimFrame(server.update);
+	};
+
 	this.update = function() {
-		if (!server.paused) {
+		if (!server.paused && !server.gameOver && !server.win) {
 			// Run physics
 			server.b2world.Step(server.b2stepAmount, 10, 10);
 
@@ -117,8 +153,20 @@ var Server = function() {
 				server.rotateWorld();
 			}
 
+			// Drop the player's hit counter
+			if (server.player.lastHitCounter > 0) {
+				server.player.lastHitCounter--;
+			}
+
+			// Drop the time left counter
+			if (server.clicks % 60 == 0) {
+				server.timeLeft--;
+			}
+
 			// Draw
-			server.b2world.DrawDebugData();
+			if (server.debug) {
+				server.b2world.DrawDebugData();
+			}
 			server.display.render();
 
 			// Clear
@@ -126,9 +174,39 @@ var Server = function() {
 
 			// Update clicks
 			server.clicks++;
+
+			// If player health is 0 or time has run out, game over
+			if (server.player.health <= 0 || server.timeLeft <= 0) {
+				server.gameOver = true;
+			}
 		}
 
-		requestAnimFrame(server.update);
+		// Game over
+		if (server.gameOver) {
+			server.display.gameOver();
+
+			/*
+			setTimeout(function() {
+				// Remove the gamescreen stuff
+				$("#gamescreen, #gameoverscreen").remove();
+
+				// Take off the game over flag
+				server.gameOver = false;
+
+				// Reset the game
+				server.resetGame();
+			}, server.settings.gameOverDelay);
+			*/
+		}
+
+		// Win
+		if (server.win) {
+			server.display.win();
+		}
+
+		if (!server.gameOver && !server.win) {
+			requestAnimFrame(server.update);
+		}
 	};
 
 	this.collision = function() {
@@ -145,7 +223,14 @@ var Server = function() {
 
 				if (otherBody.type == 'wall') {
 					server.player.health -= server.settings.damage.wall;
-					console.log("Health:", server.player.health);
+					
+					server.updateHealthDisplay();
+					server.player.lastHitCounter += server.settings.damage.hitLength;
+				} else if (otherBody.type == 'obstacle') {
+					server.player.health -= server.settings.damage.obstacle;
+
+					server.updateHealthDisplay();
+					server.player.lastHitCounter += server.settings.damage.hitLength;
 				} else if (otherBody.type == 'exit') {
 					console.log("Exit!");
 				}
@@ -167,5 +252,11 @@ var Server = function() {
 
 		// And set the target rotation	
 		server.targetRotation = this.rotations[this.rotIndex];
+	};
+
+	this.updateHealthDisplay = function() {
+		var healthWidth = Math.floor((server.player.health / 1000) * 880);
+
+		$("#status .health").width(healthWidth);
 	};
 };

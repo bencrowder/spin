@@ -30,7 +30,15 @@ var World = function() {
 	];
 
 	this.obstacles = [
-		[ -3, 5 ]
+		// First box
+		[ -3, 3 ],
+		[ -3, 5 ],
+		[ 3, 9 ],
+
+		// Second box
+		[ -9, -7 ],
+		[ -2, -3 ],
+		[ -7, 5 ],
 	];
 
 	// Generate Box2D vectors for the wallssss
@@ -58,32 +66,30 @@ var World = function() {
 			var obstacle = this.obstacles[i];
 			this.addObstacle(new b2Vec2(obstacle[0], obstacle[1]));
 		}
-		console.log(server.obstacles);
 	}
 
 	// Add a wall box to the Box2D world
 	this.addWall = function(wall, wallArray) {
-		var sliceBody = new b2BodyDef();
-		sliceBody.type = b2Body.b2_staticBody;
-		sliceBody.angularDamping = 1;
-		//var center = server.utils.findCentroid(wallArray, wallArray.length);
+		var bodyDef = new b2BodyDef();
+		bodyDef.type = b2Body.b2_staticBody;
+		bodyDef.angularDamping = 1;
 
-		sliceBody.position.Set(wall[0], wall[1]);
-		sliceBody.userData = { type: 'wall' };
+		bodyDef.position.Set(wall[0], wall[1]);
+		bodyDef.userData = { type: 'wall' };
 
 		// Create the shape and assign the vector to it
-		var slicePoly = new b2PolygonShape();
-		slicePoly.SetAsArray(wallArray, wallArray.length);
+		var wallPoly = new b2PolygonShape();
+		wallPoly.SetAsArray(wallArray, wallArray.length);
 
 		// Create the fixturedef
-		var sliceFixture = new b2FixtureDef();
-		sliceFixture.shape = slicePoly;
-		sliceFixture.density = server.settings.wall.density;
-		sliceFixture.friction = server.settings.wall.friction;
-		sliceFixture.restitution = server.settings.wall.restitution;
+		var fixDef = new b2FixtureDef();
+		fixDef.shape = wallPoly;
+		fixDef.density = server.settings.wall.density;
+		fixDef.friction = server.settings.wall.friction;
+		fixDef.restitution = server.settings.wall.restitution;
 
-		var worldSlice = server.b2world.CreateBody(sliceBody);
-		worldSlice.CreateFixture(sliceFixture);
+		var wallBody = server.b2world.CreateBody(bodyDef);
+		wallBody.CreateFixture(fixDef);
 	};
 
 	// Add an obstacle to the Box2D world

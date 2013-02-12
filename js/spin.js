@@ -36,6 +36,9 @@ $(document).ready(function() {
 	// Set up collision detection
 	server.collision();
 
+	// Set up counter
+	server.timeLeft = server.settings.game.timeLeft;
+
 	// Keyboard stuff
 	$(document).keydown(function(e) {
 		server.keys[e.which] = true;

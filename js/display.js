@@ -5,6 +5,9 @@ var Display = function() {
 	this.player;
 	this.obstacles = [];
 
+	this.playerMat;
+	this.hurtPlayerMat;
+
 	this.init = function() {
 		// Set up THREE.js
 		server.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -17,6 +20,9 @@ var Display = function() {
 		server.renderer.setClearColorHex(0x000000, 1);
 		server.renderer.shadowMapEnabled = true;
 
+		if ($("#container canvas")) {
+			$("#container canvas").remove();
+		}
 		$("#container").append(server.renderer.domElement);
 
 		this.initPostProcessing();
@@ -59,8 +65,9 @@ var Display = function() {
 		effect.uniforms['sCount'].value = 14000;
 		effect.uniforms['nIntensity'].value = 0.3;
 		effect.uniforms['sIntensity'].value = 0.1;
+		effect.renderToScreen = true;
 		this.composer.addPass(effect);
-
+		
 		var effect = new THREE.ShaderPass(THREE.SepiaShader);
 		effect.uniforms['amount'].value = 0.3;
 		effect.renderToScreen = true;
@@ -79,14 +86,18 @@ var Display = function() {
 
 		plane.doubleSided = true;
 		plane.receiveShadow = true;
-		plane.position.z = 0;
+		plane.position.z = -1;
+		server.plane = plane;
 
 		server.scene.add(plane);
 	};
 
 	// Set up player
 	this.initPlayer = function() {
-		var playerMat = new THREE.MeshLambertMaterial({ color: 0x345678 });
+		this.playerMat = new THREE.MeshLambertMaterial({ color: 0x345678 });
+		this.hurtPlayerMat = new THREE.MeshLambertMaterial({ color: 0xac2323 });
+		this.hurtPlayerMat.transparent = true;
+		this.hurtPlayerMat.opacity = 0.2;
 
 		var playerShape = new THREE.Shape();
 		playerShape.moveTo(0, .25);
@@ -95,7 +106,7 @@ var Display = function() {
 		playerShape.lineTo(0, 0);
 		var playerGeom = new THREE.ExtrudeGeometry(playerShape, { amount: .015 });
 
-		this.player = new THREE.Mesh(playerGeom, playerMat);
+		this.player = new THREE.Mesh(playerGeom, this.playerMat);
 
 		this.player.position.set(server.player.x, -server.player.y, 0);
 		this.player.scale.set(.1, .1, .1);
@@ -111,8 +122,12 @@ var Display = function() {
 		wallTexture.wrapS = wallTexture.wrapT = THREE.RepeatWrapping; 
 		wallTexture.repeat.set(1, 1);
 
+		var wallTopTexture = new THREE.ImageUtils.loadTexture('images/walltop.jpg');
+		wallTopTexture.wrapS = wallTexture.wrapT = THREE.RepeatWrapping; 
+		wallTopTexture.repeat.set(1, 1);
+
 		var wallMat = new THREE.MeshLambertMaterial({ map: wallTexture });
-		// var wallMat = new THREE.MeshLambertMaterial({ color: 0x445544 });
+		var wallTopMat = new THREE.MeshLambertMaterial({ map: wallTopTexture });
 
 		for (var i=0; i<server.world.walls.length; i++) {
 			var wall = server.world.walls[i];
@@ -122,19 +137,30 @@ var Display = function() {
 			var width = wall[2];
 			var height = wall[3];
 
-			var newWall = new THREE.Mesh(new THREE.CubeGeometry(width, height, server.settings.wall.depth), wallMat);
+			var newWall = new THREE.Mesh(new THREE.CubeGeometry(width, height, server.settings.wall.depth - .25), wallMat);
 			newWall.position.x = x + (width / 2);
 			newWall.position.y = -(y + (height / 2));
 			newWall.castShadow = true;
 			newWall.receiveShadow = true;
 
 			server.scene.add(newWall);
+
+			var newTop = new THREE.Mesh(new THREE.CubeGeometry(width, height, .25), wallTopMat);
+			newTop.position.x = x + (width / 2);
+			newTop.position.y = -(y + (height / 2));
+			newTop.position.z = server.settings.wall.depth / 2;
+			newTop.castShadow = true;
+			newTop.receiveShadow = true;
+			server.scene.add(newTop);
 		}
 	};
 
 	// Set up obstacles
 	this.initObstacles = function() {
 		var obstacleMat = new THREE.MeshLambertMaterial({ color: 0x661111 });
+		obstacleMat.opacity = 0.6;
+		obstacleMat.transparent = true;
+
 		this.obstacles = [];
 		for (var i=0; i<server.obstacles.length; i++) {
 			var obst = server.obstacles[i];
@@ -181,6 +207,12 @@ var Display = function() {
 			this.player.position.y = -server.player.y;
 			this.player.rotation.z = -server.player.angle;
 
+			if (server.player.lastHitCounter > 0) {
+				this.player.material = this.hurtPlayerMat;
+			} else {
+				this.player.material = this.playerMat;
+			}
+
 			// Update obstacle locations
 			for (var i=0; i<server.obstacles.length; i++) {
 				var obst = server.obstacles[i];
@@ -197,7 +229,6 @@ var Display = function() {
 
 			// Rotate the camera
 			if (server.cameraRotation != server.targetRotation) {
-				console.log(server.cameraRotation, "!=", server.targetRotation);
 				server.cameraRotation += server.settings.camera.step;
 
 				// Bounds checking
@@ -214,8 +245,18 @@ var Display = function() {
 			server.camera.rotation.z = server.cameraRotation;
 
 			// Render the scene
-			//server.renderer.render(server.scene, server.camera);
 			this.composer.render(0);
+
+			// Time left counter
+			$(".countdown h2").html(server.timeLeft);
 		}
+	};
+
+	this.gameOver = function() {
+		$("body").prepend("<h1 id='gamescreen'>Game over!</h1><div id='gameoverscreen' class='gamescreen'></div>");
+	};
+
+	this.win = function() {
+		$("#container").prepend("<h1 id='gamescreen'>You won!</h1><div id='winscreen' class='gamescreen'></div>");
 	};
 };

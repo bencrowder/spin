@@ -6,6 +6,7 @@ var Player = function() {
 	this.y = server.settings.player.initialY;
 	this.angle = server.settings.player.initialAngle;
 	this.health = server.settings.player.maxHealth;
+	this.lastHitCounter = 0;	// set to damage * 60 on hit, decrements each tick
 	this.body;
 
 	this.displayObj;
@@ -41,6 +42,12 @@ var Player = function() {
 		// Pause
 		if (server.keys[key_SPACE]) {
 			server.paused = (server.paused) ? false : true;
+
+			if (server.paused) {
+				$("#container canvas").css("opacity", "0.3");
+			} else {
+				$("#container canvas").css("opacity", "1.0");
+			}
 
 			return false;
 		}
