@@ -4,6 +4,9 @@
 var Display = function() {
 	this.player;
 	this.obstacles = [];
+	this.light;
+	this.toplight;
+	this.spotlight;
 
 	this.playerMat;
 	this.hurtPlayerMat;
@@ -19,6 +22,7 @@ var Display = function() {
 		server.renderer.setSize(server.settings.screen.width, server.settings.screen.height);
 		server.renderer.setClearColorHex(0x000000, 1);
 		server.renderer.shadowMapEnabled = true;
+		server.renderer.shadowMapSoft = true;
 
 		if ($("#container canvas")) {
 			$("#container canvas").remove();
@@ -80,16 +84,14 @@ var Display = function() {
 		bgTexture.wrapS = bgTexture.wrapT = THREE.RepeatWrapping; 
 		bgTexture.repeat.set(1500, 1500);
 
-		var bgMat = new THREE.MeshLambertMaterial({ map: bgTexture });
+		var bgMat = new THREE.MeshPhongMaterial({ map: bgTexture });
 
-		var plane = new THREE.Mesh(new THREE.PlaneGeometry(10000, 10000, 10, 10), bgMat);
+		server.plane = new THREE.Mesh(new THREE.PlaneGeometry(10000, 10000, 10, 10), bgMat);
 
-		plane.doubleSided = true;
-		plane.receiveShadow = true;
-		plane.position.z = -1;
-		server.plane = plane;
+		server.plane.receiveShadow = true;
+		server.plane.position.z = 0;
 
-		server.scene.add(plane);
+		server.scene.add(server.plane);
 	};
 
 	// Set up player
@@ -101,7 +103,7 @@ var Display = function() {
 
 		var playerShape = new THREE.Shape();
 		playerShape.moveTo(0, .25);
-		playerShape.lineTo(.5, 0);
+		playerShape.lineTo(.55, 0);
 		playerShape.lineTo(0, -.25);
 		playerShape.lineTo(0, 0);
 		var playerGeom = new THREE.ExtrudeGeometry(playerShape, { amount: .015 });
@@ -136,8 +138,10 @@ var Display = function() {
 			var y = wall[1];
 			var width = wall[2];
 			var height = wall[3];
+			var widthSegments = Math.max(Math.ceil(width), 1);
+			var heightSegments = Math.max(Math.ceil(height), 1);
 
-			var newWall = new THREE.Mesh(new THREE.CubeGeometry(width, height, server.settings.wall.depth - .25), wallMat);
+			var newWall = new THREE.Mesh(new THREE.CubeGeometry(width, height, server.settings.wall.depth - .25, widthSegments, heightSegments), wallMat);
 			newWall.position.x = x + (width / 2);
 			newWall.position.y = -(y + (height / 2));
 			newWall.castShadow = true;
@@ -145,7 +149,7 @@ var Display = function() {
 
 			server.scene.add(newWall);
 
-			var newTop = new THREE.Mesh(new THREE.CubeGeometry(width, height, .25), wallTopMat);
+			var newTop = new THREE.Mesh(new THREE.CubeGeometry(width, height, .25, widthSegments, heightSegments), wallTopMat);
 			newTop.position.x = x + (width / 2);
 			newTop.position.y = -(y + (height / 2));
 			newTop.position.z = server.settings.wall.depth / 2;
@@ -157,9 +161,7 @@ var Display = function() {
 
 	// Set up obstacles
 	this.initObstacles = function() {
-		var obstacleMat = new THREE.MeshLambertMaterial({ color: 0x661111 });
-		obstacleMat.opacity = 0.6;
-		obstacleMat.transparent = true;
+		var obstacleMat = new THREE.MeshPhongMaterial({ color: 0x661111 });
 
 		this.obstacles = [];
 		for (var i=0; i<server.obstacles.length; i++) {
@@ -181,31 +183,61 @@ var Display = function() {
 
 	// Set up lights
 	this.initLights = function() {
-		var pointLight = new THREE.PointLight(0xffffff);
-		pointLight.position.x = 10;
-		pointLight.position.y = -50;
-		pointLight.position.z = 130;
-		pointLight.intensity = 0.35;
-		server.scene.add(pointLight);
+		this.light = new THREE.PointLight(0xaaaaff);
+		this.light.position.x = server.settings.player.initialX;
+		this.light.position.y = server.settings.player.initialY;
+		this.light.position.z = 1;
+		this.light.intensity = 10;
+		this.light.distance = 10;
+		this.light.shadowDarkness = 0.5;
+		this.light.castShadow = true;
+		server.scene.add(this.light);
 
-		var spotLight = new THREE.SpotLight(0xffffff);
-		spotLight.position.x = 50;
-		spotLight.position.y = 50;
-		spotLight.position.z = 50;
-		spotLight.castShadow = true;
-		spotLight.shadowDarkness = 0.5;
-		spotLight.shadowMapWidth = 2048;
-		spotLight.shadowMapHeight = 2048;
-		spotLight.intensity = 2;
-		server.scene.add(spotLight);
+		this.toplight = new THREE.PointLight(0xffaa88);
+		this.toplight.position.x = server.settings.player.initialX;
+		this.toplight.position.y = server.settings.player.initialY;
+		this.toplight.position.z = 10;
+		this.toplight.intensity = 8;
+		this.toplight.distance = 11;
+		this.toplight.castShadow = true;
+		server.scene.add(this.toplight);
+
+		this.spotlight = new THREE.SpotLight(0xaaaaff);
+		this.spotlight.position.x = 0;
+		this.spotlight.position.y = 5;
+		this.spotlight.position.z = 3;
+		this.spotlight.target.position.x = 1;
+		this.spotlight.target.position.y = 0;
+		this.spotlight.target.position.z = 2;
+		this.spotlight.castShadow = true;
+		this.spotlight.shadowDarkness = 0.8;
+		this.spotlight.shadowMapWidth = 2048;
+		this.spotlight.shadowMapHeight = 2048;
+		this.spotlight.shadowCameraFov = 3;
+		this.spotlight.intensity = 4;
+		server.scene.add(this.spotlight);
 	};
 
 	this.render = function() {
 		if (!server.paused) {
+			var x = server.player.x;
+			var y = -server.player.y;
+			var angle = -server.player.angle;
+
 			// Update player location
-			this.player.position.x = server.player.x;
-			this.player.position.y = -server.player.y;
-			this.player.rotation.z = -server.player.angle;
+			this.player.position.x = x;
+			this.player.position.y = y;
+			this.player.rotation.z = angle;
+
+			// Update light locations
+			this.light.position.x = x;
+			this.light.position.y = y;
+			this.toplight.position.x = x;
+			this.toplight.position.y = y;
+			this.spotlight.position.x = x;
+			this.spotlight.position.y = y;
+			this.spotlight.target.position.x = x + 5 * Math.cos(angle);
+			this.spotlight.target.position.y = y + 5 * Math.sin(angle);
 
 			if (server.player.lastHitCounter > 0) {
 				this.player.material = this.hurtPlayerMat;

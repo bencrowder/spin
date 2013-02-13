@@ -33,7 +33,7 @@ var Server = function() {
 		'screen': {
 			'width': 900,
 			'height': 600,
-			'fov': 40,
+			'fov': 40,// 130, //40,
 			'aspect': 900 / 600,
 			'near': 0.1,
 			'far': 50,
@@ -46,7 +46,7 @@ var Server = function() {
 			'step': 0.1,
 		},
 		'wall': {
-			'depth': 5,
+			'depth': 7,
 			'density': 1,
 			'friction': 0,
 			'restitution': 0.9,
@@ -67,8 +67,8 @@ var Server = function() {
 			'obstacle': 10,
 		},
 		'player': {
-			'initialX': 0, //-7,	// 0
-			'initialY': 5.5, //4,	// 5.5
+			'initialX': 13,	// 0
+			'initialY': 0,	// 5.5
 			'initialAngle': 0,
 			'size': 0.5,
 			'maxHealth': 1000,
