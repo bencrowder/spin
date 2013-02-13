@@ -41,7 +41,7 @@ var Server = function() {
 			'maxAngularVelocity': 2,
 			'turnSpeed': 150,
 			'thrustAmount': 10,
-			'maxVelocity': 50,
+			'maxVelocity': 5,
 		},
 		'game': {
 			'timeLeft': 300,			// in seconds (5 minutes)
