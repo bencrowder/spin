@@ -48,7 +48,7 @@ var World = function() {
 		[ 0, 20.25, .25, 4.75 ],			// top thin wall
 
 		// Fourth box, to right of box 3
-		[ 15, -25, 1, 70 ],			// right side
+		[ 15, -25, 3, 70 ],			// right side
 
 		[ 7, 30, 1, 20 ],			// left side
 
@@ -108,7 +108,97 @@ var World = function() {
 		[ 58, -10, 10, 1 ],			// prongs
 		[ 58, -15, 10, 1 ],			// prongs
 
-		// Box 8, above box 7
+		// Box 8, under box 3
+		[ -10, 30, 1, 5 ],			// left
+
+		[ -20, 40, 25, 1 ],			// bottom
+		[ -22, 50, 29, 1 ],			// bottom
+
+		[ -5, 33, 1, 5 ],			// left
+		[ 2, 35, 1, 5 ],			// left
+
+		[ -23, 21, 1, 30 ],			// left
+		[ -13, 40, 1, 10 ],			// left
+		[ -3, 40, 1, 10 ],			// left
+
+		[ -23, 0, 10, 1 ],			// left
+		[ -23, 20, 10, 1 ],			// left
+		[ -18, 10, 8, 1 ],			// left
+
+		[ -80, 65, 122, 1 ],			// bottom
+		[ 41, 51, 1, 15 ],			// bottom
+		[ -80, -20, 1, 80 ],			// bottom
+
+		// Box 9, above box 2
+		[ -25, -25, 40, 1 ],		// top
+
+		[ -23, -21, 1, 38 ],		// left
+		[ -22, -15, 10, 1 ],		// top
+		[ -12, -19, 1, 5 ],		// left
+
+		[ -30, -25, 1, 40 ],		// top
+
+		// Trap
+		[ -40, -30, 51, 1 ],			// right side
+		[ 11, -70, 1, 41 ],			// right side
+		[ 18, -70, 1, 41 ],			// right side
+		[ 19, -30, 51, 1 ],			// right side
+		[ 11, -71, 8, 1 ],			// right side
+
+		// Fake box
+		[ 19, -50, 48, 1 ],
+		[ 19, -40, 10, 1 ],
+		[ 25, -39, 1, 5 ],
+		[ 22, -45, 1, 5 ],
+		[ 35, -45, 1, 15 ],
+		[ 45, -49, 1, 15 ],
+		[ 46, -35, 10, 1 ],
+		[ 46, -45, 5, 1 ],
+
+		// Left corridor
+		[ -60, -30, 1, 40 ],		// top
+		[ -60, 10, 30, 1 ],		// top
+
+		// Upper left expanse
+		[ -100, -100, 250, 5 ],		// top
+		[ -100, -95, 5, 220 ],		// top
+		[ -100, 120, 250, 5 ],		// top
+		[ 150, -100, 5, 225 ],		// top
+
+		[ -30, 25, 1, 30 ],
+		[ -30, 55, 50, 1 ],
+
+		[ -40, 15, 1, 15 ],
+		[ -40, 30, 10, 1 ],
+
+		[ -45, 11, 1, 25 ],
+
+		[ -45, 36, 15, 1 ],
+
+		// Exit
+		[ 100, 80, 50, 1 ],
+		[ 100, 81, 1, 25 ],			// left opening
+		[ 100, 110, 1, 10 ],		// left opening
+
+		[ 101, 90, 13, 1 ],
+		[ 101, 105, 23, 1 ],
+		[ 101, 110, 13, 1 ],
+		[ 123, 105, 1, 10 ],		// left opening
+		[ 126, 80, 1, 30 ],		// left opening
+		[ 127, 100, 5, 1 ],
+		[ 127, 93, 5, 1 ],
+		[ 135, 80, 1, 30 ],
+		[ 143, 90, 1, 30 ],
+		[ 140, 110, 1, 5 ],
+		[ 130, 110, 1, 5 ],
+		[ 135, 101, 5, 1 ],
+		[ 135, 94, 5, 1 ],
+		[ 135, 84, 5, 1 ],
+		[ 144, 98, 3, .25 ],
+		[ 147, 102, 3, .25 ],
+		[ 144, 106, 3, .25 ],
+		[ 147, 110, 3, .25 ],
+		[ 144, 114, 3, .25 ],
 	];
 
 	this.obstacles = [
@@ -121,9 +211,109 @@ var World = function() {
 		[ -9, -7 ],
 		[ -2, -3 ],
 		[ -7, 5 ],
+
+		// Third box
+		[ -3, 22 ],
+		[ 3, 22 ],
+
+		[ 11, 0 ],
+
+		[ 21, 35 ],
+		[ 28, 40 ],
+		[ 38, 37 ],
+
+		[ 38, 27 ],
+		[ 22, 18 ],
+		[ 22, 0 ],
+		[ 48, 27 ],
+		[ 56, 8 ],
+
+		[ 21, -15 ],
+		[ 25, -15 ],
+		[ 29, -15 ],
+
+		[ 145.5, 112 ],
+		[ 145.5, 104 ],
+		[ 145.5, 96 ],
+
+		[ 148.5, 114 ],
+		[ 148.5, 106 ],
+		[ 148.5, 98 ],
+
+		[ 130, 95 ],
+		[ 128, 85 ],
+		[ 140, 95 ],
+		[ 138, 85 ],
+
+		[ 102, 86 ],
+		[ 105, 90 ],
+		[ 110, 91 ],
+		[ 115, 92 ],
+		[ 120, 93 ],
+		[ 125, 94 ],
+
+		[ 113, 82 ],
+		[ 117, 83 ],
+		[ 122, 84 ],
+
+		[ 113, 102 ],
+		[ 117, 103 ],
+		[ 122, 104 ],
+
+		[ 110, 112 ],
+		[ 115, 113 ],
+		[ 120, 114 ],
+
+		[ -30, 20 ],
+		[ -50, 25 ],
+		[ -25, 15 ],
+		[ -80, -80 ],
+		[ -60, -60 ],
+		[ -40, -40 ],
+		[ -50, -80 ],
+		[ -20, -80 ],
+		[ 0, -80 ],
+		[ 30, -80 ],
+		[ 50, -80 ],
+		[ 70, -85 ],
+		[ 90, -82 ],
+		[ 110, -81 ],
+		[ 120, -79 ],
+		[ 10, -40 ],
+		[ 13, -45 ],
+
+		[ 90, -42 ],
+		[ 110, -41 ],
+		[ 120, -49 ],
+
+		[ 80, -22 ],
+		[ 100, -21 ],
+		[ 60, -29 ],
+		[ 120, -29 ],
+
+		[ 87, 22 ],
+		[ 107, 21 ],
+		[ 67, 29 ],
+		[ 127, 29 ],
+
+		[ 85, 52 ],
+		[ 105, 51 ],
+		[ 65, 59 ],
+		[ 125, 59 ],
+
+		[ 0, 80 ],
+		[ 10, 80 ],
+		[ -10, 80 ],
+		[ -20, 70 ],
+		[ 20, 70 ],
+
+		[ -60, 30 ],
+		[ -63, 50 ],
 	];
 
-	// Generate Box2D vectors for the wallssss
+	this.exit = [ 145, 117.25 ];
+
+	// Generate Box2D vectors for the walls, obstacles, and exit
 	this.generate = function() {
 		// Create the walls
 		for (var i=0; i<this.walls.length; i++) {
@@ -148,6 +338,8 @@ var World = function() {
 			var obstacle = this.obstacles[i];
 			this.addObstacle(new b2Vec2(obstacle[0], obstacle[1]));
 		}
+
+		this.addExit(new b2Vec2(this.exit[0], this.exit[1]));
 	}
 
 	// Add a wall box to the Box2D world
@@ -193,6 +385,27 @@ var World = function() {
 		body.CreateFixture(fixDef);
 
 		server.obstacles.push({ x: position.x, y: position.y, angle: 0, body: body });
+	};
+
+	// Add the exit to the Box2D world
+	this.addExit = function(position) {
+		var bodyDef = new b2BodyDef();
+		bodyDef.type = b2Body.b2_dynamicBody;
+
+		bodyDef.position.Set(position.x, position.y);
+		bodyDef.userData = { type: 'exit' };
+
+		// Create the fixturedef
+		var fixDef = new b2FixtureDef();
+		fixDef.shape = new b2CircleShape(server.settings.exit.size);
+		fixDef.density = server.settings.exit.density;
+		fixDef.friction = server.settings.exit.friction;
+		fixDef.restitution = server.settings.exit.restitution;
+
+		var body = server.b2world.CreateBody(bodyDef);
+		body.CreateFixture(fixDef);
+
+		server.exit = { x: position.x, y: position.y, angle: 0, body: body };
 	};
 };
 

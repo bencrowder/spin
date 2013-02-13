@@ -10,6 +10,7 @@ var Server = function() {
 	this.gameOver = false;
 	this.win = false;
 	this.timeLeft;
+	this.lightsOn = false;
 
 	this.b2world;				// Box2d world
 	this.canvas;				// HTML canvas
@@ -27,16 +28,31 @@ var Server = function() {
 	this.targetRotation = 0;
 	
 	this.settings = {
+		'player': {
+			'initialX': 0,		// 0
+			'initialY': 5.5,	// 5.5
+			'initialAngle': 0,
+			'size': 0.5,
+			'maxHealth': 1000,
+			'density': 8,
+			'friction': 0.1,
+			'restitution': 0.1,
+			'angularDamping': 4.0,
+			'maxAngularVelocity': 2,
+			'turnSpeed': 150,
+			'thrustAmount': 10,
+			'maxVelocity': 50,
+		},
 		'game': {
-			'timeLeft': 180,			// in seconds (3 minutes)
+			'timeLeft': 300,			// in seconds (5 minutes)
 		},
 		'screen': {
-			'width': 900,
+			'width': 700,
 			'height': 600,
-			'fov': 40,// 130, //40,
-			'aspect': 900 / 600,
+			'fov': 45,
+			'aspect': 700 / 600,
 			'near': 0.1,
-			'far': 50,
+			'far': 40,
 		},
 		'world': {
 			'gravity': 2,
@@ -55,7 +71,7 @@ var Server = function() {
 			'size': .4,
 			'width': .85,
 			'height': .85,
-			'depth': 4,
+			'depth': 2,
 			'density': 1,
 			'friction': 0,
 			'restitution': 1,
@@ -66,23 +82,11 @@ var Server = function() {
 			'floater': 5,
 			'obstacle': 10,
 		},
-		'player': {
-			'initialX': 13,	// 0
-			'initialY': 0,	// 5.5
-			'initialAngle': 0,
-			'size': 0.5,
-			'maxHealth': 1000,
-			'density': 8,
-			'friction': 0.1,
-			'restitution': 0.1,
-			'angularDamping': 4.0,
-			'maxAngularVelocity': 2,
-			'turnSpeed': 150,
-			'thrustAmount': 10,
-			'maxVelocity': 50,
-		},
 		'exit': {
-			'size': 0.25,
+			'size': 1.5,
+			'topradius': 1.25,
+			'bottomradius': 1.75,
+			'height': .25,
 			'density': 5,
 			'friction': 1,
 			'restitution': 0,
@@ -232,7 +236,7 @@ var Server = function() {
 					server.updateHealthDisplay();
 					server.player.lastHitCounter += server.settings.damage.hitLength;
 				} else if (otherBody.type == 'exit') {
-					console.log("Exit!");
+					server.win = true;
 				}
 			} else {
 				// Other collisions
@@ -255,7 +259,7 @@ var Server = function() {
 	};
 
 	this.updateHealthDisplay = function() {
-		var healthWidth = Math.floor((server.player.health / 1000) * 880);
+		var healthWidth = Math.floor((server.player.health / 1000) * 680);
 
 		$("#status .health").width(healthWidth);
 	};

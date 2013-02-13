@@ -5,7 +5,6 @@ var Display = function() {
 	this.player;
 	this.obstacles = [];
 	this.light;
-	this.toplight;
 	this.spotlight;
 
 	this.playerMat;
@@ -14,11 +13,23 @@ var Display = function() {
 	this.init = function() {
 		// Set up THREE.js
 		server.renderer = new THREE.WebGLRenderer({ antialias: true });
+
+		if (server.lightsOn) {
+			server.settings.screen.fov = 110;
+		}
+
 		server.camera = new THREE.PerspectiveCamera(server.settings.screen.fov, server.settings.screen.aspect, server.settings.screen.near, server.settings.screen.far);
+
 		server.scene = new THREE.Scene();
 
+		if (server.lightsOn) {
+			server.camera.position.z = 39;
+		} else {
+			server.camera.position.z = 20;
+		}
+
 		server.scene.add(server.camera);
-		server.camera.position.z = 20;
+
 		server.renderer.setSize(server.settings.screen.width, server.settings.screen.height);
 		server.renderer.setClearColorHex(0x000000, 1);
 		server.renderer.shadowMapEnabled = true;
@@ -38,6 +49,8 @@ var Display = function() {
 		this.initWalls();
 
 		this.initObstacles();
+
+		this.initExit();
 
 		this.initLights();
 
@@ -181,28 +194,36 @@ var Display = function() {
 		}
 	};
 
+	// Set up exit
+	this.initExit = function() {
+		var exitPos = server.world.exit;
+
+		var x = exitPos[0];
+		var y = exitPos[1];
+
+		var exitMat = new THREE.MeshLambertMaterial({ color: 0x000000, emissive: 0x88ff33 });
+
+		var exit = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.75, 0.25, 32, 4, false), exitMat);
+		exit.position.x = x + (1.75 / 2);
+		exit.position.y = -(y + (1.75 / 2));
+		exit.rotation.x = Math.PI / 2;
+		exit.castShadow = true;
+
+		server.scene.add(exit);
+	};
+
 	// Set up lights
 	this.initLights = function() {
-		this.light = new THREE.PointLight(0xaaaaff);
+		// Player light
+		this.light = new THREE.PointLight(0xffffff);
 		this.light.position.x = server.settings.player.initialX;
 		this.light.position.y = server.settings.player.initialY;
 		this.light.position.z = 1;
 		this.light.intensity = 10;
 		this.light.distance = 10;
-		this.light.shadowDarkness = 0.5;
-		this.light.castShadow = true;
 		server.scene.add(this.light);
 
-		this.toplight = new THREE.PointLight(0xffaa88);
-		this.toplight.position.x = server.settings.player.initialX;
-		this.toplight.position.y = server.settings.player.initialY;
-		this.toplight.position.z = 10;
-		this.toplight.intensity = 8;
-		this.toplight.distance = 11;
-		this.toplight.castShadow = true;
-		server.scene.add(this.toplight);
-
-		this.spotlight = new THREE.SpotLight(0xaaaaff);
+		this.spotlight = new THREE.SpotLight(0xffffff);
 		this.spotlight.position.x = 0;
 		this.spotlight.position.y = 5;
 		this.spotlight.position.z = 3;
@@ -215,7 +236,13 @@ var Display = function() {
 		this.spotlight.shadowMapHeight = 2048;
 		this.spotlight.shadowCameraFov = 3;
 		this.spotlight.intensity = 4;
+		this.spotlight.distance = 15;
 		server.scene.add(this.spotlight);
+
+		if (server.lightsOn) {
+			var ambLight = new THREE.AmbientLight(0x999999);
+			server.scene.add(ambLight);
+		}
 	};
 
 	this.render = function() {
@@ -232,8 +259,6 @@ var Display = function() {
 			// Update light locations
 			this.light.position.x = x;
 			this.light.position.y = y;
-			this.toplight.position.x = x;
-			this.toplight.position.y = y;
 			this.spotlight.position.x = x;
 			this.spotlight.position.y = y;
 			this.spotlight.target.position.x = x + 5 * Math.cos(angle);
@@ -289,6 +314,6 @@ var Display = function() {
 	};
 
 	this.win = function() {
-		$("#container").prepend("<h1 id='gamescreen'>You won!</h1><div id='winscreen' class='gamescreen'></div>");
+		$("body").prepend("<h1 id='gamescreen'>You won!</h1><div id='winscreen' class='gamescreen'></div>");
 	};
 };
