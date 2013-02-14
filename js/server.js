@@ -44,7 +44,7 @@ var Server = function() {
 			'maxVelocity': 5,
 		},
 		'game': {
-			'timeLeft': 300,			// in seconds (5 minutes)
+			'timeLeft': 600,			// in seconds (10 minutes)
 		},
 		'screen': {
 			'width': 700,

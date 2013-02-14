@@ -72,7 +72,6 @@ var Player = function() {
 			if (velocity < server.settings.player.maxVelocity) {
 				this.body.ApplyImpulse(new b2Vec2(Math.cos(this.angle) * server.settings.player.thrustAmount, Math.sin(this.angle) * server.settings.player.thrustAmount), this.body.GetWorldCenter());
 			}
-			console.log(velocity, server.settings.player.maxVelocity, "thrust", server.settings.player.thrustAmount);
 		}
 
 		// Maybe add brakes later?
