@@ -11,7 +11,7 @@ var Server = function() {
 	this.win = false;
 	this.timeLeft;
 	this.lightsOn = false;
-	this.firstPerson = true;
+	this.firstPerson = false;
 	this.swoopMode = false;
 
 	this.b2world;				// Box2d world
