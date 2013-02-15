@@ -17,6 +17,7 @@ var Player = function() {
 		bodyDef.position.y = this.y;
 		bodyDef.position.z = 0;
 		bodyDef.type = b2Body.b2_dynamicBody;
+		bodyDef.linearDamping = server.settings.player.linearDamping;
 		bodyDef.angularDamping = server.settings.player.angularDamping;
 		bodyDef.userData = { type: 'player', data: this };
 
@@ -38,6 +39,7 @@ var Player = function() {
 		var key_UP = 38;
 		var key_RIGHT = 39;
 		var key_DOWN = 40;
+		var key_S = 83;
 
 		// Pause
 		if (server.keys[key_SPACE]) {
@@ -76,6 +78,16 @@ var Player = function() {
 
 		// Maybe add brakes later?
 		if (server.keys[key_DOWN]) {
+			return false;
+		}
+
+		// Swoop mode
+		if (server.keys[key_S]) {
+			server.swoopMode = (server.swoopMode) ? false : true;
+			if (!server.swoopMode) {
+				server.camera.position.z = server.settings.player.initialZ;
+			}
+
 			return false;
 		}
 	};

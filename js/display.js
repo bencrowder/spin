@@ -10,7 +10,12 @@ var Display = function() {
 	this.playerMat;
 	this.hurtPlayerMat;
 
+	this.dir = 1;
+
 	this.init = function() {
+		// Resize page
+		$("#page").width(server.settings.screen.width);
+
 		// Set up THREE.js
 		server.renderer = new THREE.WebGLRenderer({ antialias: true });
 
@@ -19,13 +24,14 @@ var Display = function() {
 		}
 
 		server.camera = new THREE.PerspectiveCamera(server.settings.screen.fov, server.settings.screen.aspect, server.settings.screen.near, server.settings.screen.far);
+		server.camera.up = new THREE.Vector3(0, 0, 1);
 
 		server.scene = new THREE.Scene();
 
 		if (server.lightsOn) {
 			server.camera.position.z = 39;
 		} else {
-			server.camera.position.z = 20;
+			server.camera.position.z = (server.firstPerson) ? server.settings.player.initialZ : 20;
 		}
 
 		server.scene.add(server.camera);
@@ -235,7 +241,7 @@ var Display = function() {
 		this.spotlight.shadowMapWidth = 2048;
 		this.spotlight.shadowMapHeight = 2048;
 		this.spotlight.shadowCameraFov = 3;
-		this.spotlight.intensity = 4;
+		this.spotlight.intensity = (server.firstPerson) ? 0.5 : 4;
 		this.spotlight.distance = 15;
 		server.scene.add(this.spotlight);
 
@@ -250,6 +256,8 @@ var Display = function() {
 			var x = server.player.x;
 			var y = -server.player.y;
 			var angle = -server.player.angle;
+			var target_x = x + 5 * Math.cos(angle);
+			var target_y = y + 5 * Math.sin(angle);
 
 			// Update player location
 			this.player.position.x = x;
@@ -261,8 +269,26 @@ var Display = function() {
 			this.light.position.y = y;
 			this.spotlight.position.x = x;
 			this.spotlight.position.y = y;
-			this.spotlight.target.position.x = x + 5 * Math.cos(angle);
-			this.spotlight.target.position.y = y + 5 * Math.sin(angle);
+			this.spotlight.target.position.x = target_x;
+			this.spotlight.target.position.y = target_y;
+
+			// Move the camera to follow the player
+			server.camera.position.x = x;
+			server.camera.position.y = y;
+			if (server.firstPerson) {
+				// Look the way the player is pointing
+				if (server.swoopMode) {
+					server.camera.position.z += 0.1 * this.dir;
+
+					if (server.camera.position.z > 15 || server.camera.position.z < 1) {
+						this.dir *= -1;
+					}
+				}
+
+				server.camera.lookAt(new THREE.Vector3(target_x, target_y, server.settings.player.initialZ));
+			} else {
+				server.camera.lookAt(new THREE.Vector3(x, y, 0));
+			}
 
 			if (server.player.lastHitCounter > 0) {
 				this.player.material = this.hurtPlayerMat;
@@ -279,27 +305,24 @@ var Display = function() {
 				this.obstacles[i].rotation.z = obst.angle;
 			}
 
-			// Point the camera
-			server.camera.position.x = this.player.position.x;
-			server.camera.position.y = this.player.position.y;
-			server.camera.lookAt(new THREE.Vector3(this.player.position.x, this.player.position.y, 0));
-
 			// Rotate the camera
-			if (server.cameraRotation != server.targetRotation) {
-				server.cameraRotation += server.settings.camera.step;
+			if (!server.firstPerson) {
+				if (server.cameraRotation != server.targetRotation) {
+					server.cameraRotation += server.settings.camera.step;
 
-				// Bounds checking
-				if (server.targetRotation == 0) {
-					if (server.cameraRotation > Math.PI * 2) {
-						server.cameraRotation = 0;
-					}
-				} else {
-					if (server.cameraRotation > server.targetRotation) {
-						server.cameraRotation = server.targetRotation;
+					// Bounds checking
+					if (server.targetRotation == 0) {
+						if (server.cameraRotation > Math.PI * 2) {
+							server.cameraRotation = 0;
+						}
+					} else {
+						if (server.cameraRotation > server.targetRotation) {
+							server.cameraRotation = server.targetRotation;
+						}
 					}
 				}
+				server.camera.rotation.z = server.cameraRotation;
 			}
-			server.camera.rotation.z = server.cameraRotation;
 
 			// Render the scene
 			this.composer.render(0);

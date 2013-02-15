@@ -11,6 +11,8 @@ var Server = function() {
 	this.win = false;
 	this.timeLeft;
 	this.lightsOn = false;
+	this.firstPerson = true;
+	this.swoopMode = false;
 
 	this.b2world;				// Box2d world
 	this.canvas;				// HTML canvas
@@ -31,12 +33,14 @@ var Server = function() {
 		'player': {
 			'initialX': 0,		// 0
 			'initialY': 5.5,	// 5.5
+			'initialZ': 1,
 			'initialAngle': 0,
 			'size': 0.5,
 			'maxHealth': 1000,
-			'density': 8,
+			'density': (this.firstPerson) ? 20 : 8,
 			'friction': 0.1,
 			'restitution': 0.1,
+			'linearDamping': (this.firstPerson) ? 2 : 0,
 			'angularDamping': 4.0,
 			'maxAngularVelocity': 2,
 			'turnSpeed': 150,
@@ -47,10 +51,10 @@ var Server = function() {
 			'timeLeft': 600,			// in seconds (10 minutes)
 		},
 		'screen': {
-			'width': 700,
+			'width': (this.firstPerson) ? 900 : 600,
 			'height': 600,
-			'fov': 45,
-			'aspect': 700 / 600,
+			'fov': (this.firstPerson) ? 60 : 45,
+			'aspect': (this.firstPerson) ? 900 / 600 : 600 / 600,
 			'near': 0.1,
 			'far': 40,
 		},
@@ -105,34 +109,6 @@ var Server = function() {
 	this.rotations = [ 0, Math.PI / 2, Math.PI, 3 * Math.PI / 2 ];
 	this.rotIndex = 0;
 
-	this.resetGame = function() {
-		// Instance objects
-		server.player = new Player();
-		server.world = new World();
-		server.utils = new Utils();
-		server.display = new Display();
-
-		// Set up the Box2D world	
-		server.b2world = new b2World(new b2Vec2(0, server.settings.world.gravity), true);
-		server.b2scale = server.settings.world.scale;
-		server.b2stepAmount = 1/60;
-
-		// Create the world
-		server.world.generate();
-
-		// Create the player
-		server.player.generate();
-
-		// Set up THREE.js, etc.
-		server.display.init();
-
-		// Set up collision detection
-		server.collision();
-	
-		// Start the game loop again
-		requestAnimFrame(server.update);
-	};
-
 	this.update = function() {
 		if (!server.paused && !server.gameOver && !server.win) {
 			// Run physics
@@ -152,8 +128,8 @@ var Server = function() {
 				o.angle = o.body.GetAngle();
 			}
 
-			// Every so often, rotate the world
-			if (server.clicks % 300 == 0) {
+			// Every so often, rotate the world (but not in first-person mode)
+			if (server.clicks % 300 == 0 && !server.firstPerson) {
 				server.rotateWorld();
 			}
 
@@ -188,19 +164,6 @@ var Server = function() {
 		// Game over
 		if (server.gameOver) {
 			server.display.gameOver();
-
-			/*
-			setTimeout(function() {
-				// Remove the gamescreen stuff
-				$("#gamescreen, #gameoverscreen").remove();
-
-				// Take off the game over flag
-				server.gameOver = false;
-
-				// Reset the game
-				server.resetGame();
-			}, server.settings.gameOverDelay);
-			*/
 		}
 
 		// Win
@@ -259,7 +222,7 @@ var Server = function() {
 	};
 
 	this.updateHealthDisplay = function() {
-		var healthWidth = Math.floor((server.player.health / 1000) * 680);
+		var healthWidth = Math.floor((server.player.health / 1000) * $("#status").width());
 
 		$("#status .health").width(healthWidth);
 	};

@@ -20,7 +20,8 @@ $(document).ready(function() {
 	server.display = new Display();
 
 	// Set up the Box2D world	
-	server.b2world = new b2World(new b2Vec2(0, server.settings.world.gravity), true);
+	var gravity = (server.firstPerson) ? 0 : server.settings.world.gravity;
+	server.b2world = new b2World(new b2Vec2(0, gravity), true);
 	server.b2scale = server.settings.world.scale;
 	server.b2stepAmount = 1/60;
 
